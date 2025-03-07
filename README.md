@@ -1,4 +1,4 @@
-# Binance Trade Data Analysis Assignment
+# Binance Trade Data Analysis
 
 ## Overview
 This project involves analyzing historical trade data from Binance accounts over 90 days. The objective is to calculate key financial metrics, rank accounts based on performance, and provide insights.
