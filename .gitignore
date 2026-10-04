@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+analysis-output/
+final_metrics.csv
+top_20_accounts.csv
+top_accounts.csv
+.DS_Store
