@@ -1,44 +1,82 @@
-# Binance Trade Data Analysis
+# Binance Trade Analysis
 
-## Overview
-This project involves analyzing historical trade data from Binance accounts over 90 days. The objective is to calculate key financial metrics, rank accounts based on performance, and provide insights.
+This repository contains a reproducible Python workflow for comparing historical Binance account records over the supplied 90-day dataset.
 
-## Task Details
-- **Dataset**: Contains trade history with details like timestamps, assets, trade side (BUY/SELL), price, and more.
-- **Objective**: Analyze the dataset, calculate financial metrics, rank accounts, and provide a top 20 list.
+It analyses completed trade history. It does not place trades, predict prices, connect to a Binance account or provide investment advice.
 
-## Metrics Calculated
-1. **ROI (Return on Investment)**: Measures profitability relative to investment.
-2. **PnL (Profit and Loss)**: Sum of realized profits/losses for each account.
-3. **Sharpe Ratio**: Risk-adjusted return metric.
-4. **MDD (Maximum Drawdown)**: Maximum loss from a peak.
-5. **Win Rate**: Percentage of profitable trades.
-6. **Win Positions**: Number of profitable trades.
-7. **Total Positions**: Total number of trades executed.
+## What it reports
 
-## Steps to Complete the Task
-### 1. Data Exploration and Cleaning
-- Loaded and inspected the dataset.
-- Handled missing values and structured trade history.
+- Total realised profit and loss
+- Total, winning, losing and break-even trades
+- Win rate
+- Notional turnover
+- Return on notional
+- Maximum drawdown of cumulative realised PnL
+- A trade-level Sharpe proxy
+- A percentile-based comparison score
 
-### 2. Feature Engineering
-- Created derived features such as cumulative PnL, drawdowns, and return distributions.
-- Applied transformations to enhance insights.
+The dataset does not provide a reliable invested-capital series. The script therefore reports **return on notional**, not true portfolio ROI. The Sharpe value is based on trade-level realised PnL rather than periodic portfolio returns, so it is a comparison aid rather than a conventional portfolio Sharpe ratio.
 
-### 3. Ranking Algorithm
-- Developed a weighted scoring system:
-  - **40%** ROI
-  - **30%** PnL
-  - **20%** Sharpe Ratio
-  - **10%** Win Rate
-- Sorted accounts based on final scores.
+## Ranking method
 
-## Deliverables
-- **Python Analysis Script**: Jupyter Notebook containing full analysis.
+Each account metric is converted to a cross-sectional percentile before weighting. This prevents a large raw PnL value from overwhelming metrics that use different units.
 
-## Assumptions & Considerations
-- **Risk-Free Rate Assumed as Zero**: Used in Sharpe Ratio calculation.
-- **Trade Data Integrity**: Assumed valid and accurate.
-- **No Leverage Considered**: PnL and ROI calculated based on provided data.
+| Component | Weight |
+| --- | ---: |
+| Return on notional | 40% |
+| Total realised PnL | 30% |
+| Trade-level Sharpe proxy | 20% |
+| Maximum drawdown | 10% |
 
+Higher maximum-drawdown values are better because a drawdown closer to zero represents a smaller loss from the running peak.
 
+## Requirements
+
+- Python 3.10 or newer
+- pandas
+- NumPy
+
+Install the dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+## Run
+
+The default command expects `TRADES_CopyTr_90D_ROI.csv` beside the script:
+
+```bash
+python Binance-Trade-Analysis.py
+```
+
+Or provide explicit paths:
+
+```bash
+python Binance-Trade-Analysis.py \
+  --input path/to/trades.csv \
+  --output-dir analysis-output \
+  --top 20
+```
+
+The command writes:
+
+- `analysis-output/final_metrics.csv`
+- `analysis-output/top_accounts.csv`
+
+## Input contract
+
+The source CSV must include:
+
+- `Port_IDs`
+- `Trade_History`, containing a JSON array for each account
+
+Each trade record must include `realizedProfit` and `quantity`. `quoteQty` is preferred for notional turnover. If it is absent, the script uses `abs(quantity × price)`. A `time`, `timestamp` or `updateTime` field is used to sort trades before calculating drawdown.
+
+## Limits
+
+- The result depends on the supplied dataset and its definitions.
+- Fees, funding, leverage and unrealised PnL may not be fully represented.
+- Return on notional is not the same as return on invested capital.
+- The trade-level Sharpe proxy is not a periodic portfolio Sharpe ratio.
+- Rankings are descriptive and do not establish strategy quality or future performance.
